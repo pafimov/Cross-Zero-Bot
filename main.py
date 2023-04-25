@@ -37,11 +37,11 @@ async def go_hello(message : types.Message):
     game_id = get_user_game(message.from_id)
     if game_id == -2:
         add_to_db(message.from_id)
-        await message.reply('Привет! Это игра в Крестики-Нолики!\nЧтобы начать новую игру, напишите команду /play ')
+        await message.reply('Привет! Это игра в Крестики-Нолики!\nЧтобы начать новую игру, нажмите /play ')
     elif game_id == -1:
-        await message.reply('Чтобы начать новую игру, напишите команду /play ')
+        await message.reply('Чтобы начать новую игру, нажмите /play ')
     else:
-        await message.reply('Вы сейчас находитесь в игре. Продолжите игру, либо, если хотите её завершить, напишите /stop ')
+        await message.reply('Вы сейчас находитесь в игре. Продолжите игру, либо, если хотите её завершить, нажмите /stop ')
 
 
 
@@ -152,8 +152,8 @@ async def start_game(player1, player2):
     games[free_id] = new_game
     game_id = free_id
     free_id+=1
-    await bot.send_message(player1, 'Игра началась!\nЧтобы завершить игру до её окончания, напишите /stop ')
-    await bot.send_message(player2, 'Игра началась!\nЧтобы завершить игру до её окончания, напишите /stop ')
+    await bot.send_message(player1, 'Игра началась!\nЧтобы завершить игру до её окончания, нажмите /stop ')
+    await bot.send_message(player2, 'Игра началась!\nЧтобы завершить игру до её окончания, нажмите /stop ')
     await send_field(game_id)
 
 
@@ -173,14 +173,14 @@ async def finish_game(game_id, someone=0):
     edit_user_game(players[1], -1)
     del games[game_id]
     if someone == 1:
-        await bot.send_message(players[0], 'Игра завершена одним из игроков.\nЧтобы начать новую игру, напишите команду /play ')
-        await bot.send_message(players[1], 'Игра завершена одним из игроков.\nЧтобы начать новую игру, напишите команду /play ')
+        await bot.send_message(players[0], 'Игра завершена одним из игроков.\nЧтобы начать новую игру, нажмите команду /play ')
+        await bot.send_message(players[1], 'Игра завершена одним из игроков.\nЧтобы начать новую игру, нажмите команду /play ')
 
 @dp.message_handler(commands=['stop'])
 async def stop_game(message : types.Message):
     game_id = get_user_game(message.from_id)
     if game_id == -1 or game_id >= free_id:
-        await message.reply("Вы сейчас не в игре.\nЧтобы начать новую игру, напишите команду /play ")
+        await message.reply("Вы сейчас не в игре.\nЧтобы начать новую игру, нажмите команду /play ")
     await finish_game(game_id, 1)
 
 
@@ -197,11 +197,11 @@ async def make_go(game_id, x, y):
     
     await send_field(game_id, 1)
     if st == 0:
-        await bot.send_message(players[1-games[game_id].current], 'Вы выиграли!\nЧтобы начать новую игру, напишите команду /play ')
-        await bot.send_message(players[games[game_id].current], 'Вы проиграли!\nЧтобы начать новую игру, напишите команду /play ')
+        await bot.send_message(players[1-games[game_id].current], 'Вы выиграли!\nЧтобы начать новую игру, нажмите /play ')
+        await bot.send_message(players[games[game_id].current], 'Вы проиграли!\nЧтобы начать новую игру, нажмите /play ')
     else:
-        await bot.send_message(players[1-games[game_id].current], 'Ничья!\nЧтобы начать новую игру, напишите команду /play ')
-        await bot.send_message(players[games[game_id].current], 'Ничья!\nЧтобы начать новую игру, напишите команду /play ')
+        await bot.send_message(players[1-games[game_id].current], 'Ничья!\nЧтобы начать новую игру, нажмите /play ')
+        await bot.send_message(players[games[game_id].current], 'Ничья!\nЧтобы начать новую игру, нажмите /play ')
     await finish_game(game_id)
     return 1
     
@@ -213,7 +213,7 @@ async def some_text(callback : types.CallbackQuery):
     user_id = callback.from_user.id
     game_id = get_user_game(user_id)
     if game_id == -1 or game_id >= free_id:
-        await message.reply("Вы сейчас не в игре. Напишите /play, чтобы играть.")
+        await message.reply("Вы сейчас не в игре. нажмите /play, чтобы играть.")
         await callback.answer()
         return
     # print(game_id)
