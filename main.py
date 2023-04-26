@@ -137,8 +137,8 @@ async def send_field(game_id, final = 0):
     kb = games[game_id].get_kb()
     players = games[game_id].players
     if final == 0:
-        await bot.send_message(players[games[game_id].current], 'Ваш ход- - - - - - - -', reply_markup=kb)
-        await bot.send_message(players[1-games[game_id].current], 'Ход соперника---', reply_markup=kb)
+        await bot.send_message(players[games[game_id].current], 'Ваш ход - - - - - - - -', reply_markup=kb)
+        await bot.send_message(players[1-games[game_id].current], 'Ход соперника- - - -', reply_markup=kb)
     else:
         await bot.send_message(players[games[game_id].current], 'Финальная карта.', reply_markup=kb)
         await bot.send_message(players[1-games[game_id].current], 'Финальная карта.', reply_markup=kb)
@@ -159,13 +159,20 @@ async def start_game(player1, player2):
 
 @dp.message_handler(commands=['play'])
 async def search_for_opponent(message : types.Message):
-    await message.reply('Ищу соперника!')
-    global waiting
-    if waiting != -1:
-        await start_game(waiting, message.from_id)
-        waiting = -1
+    global waiting, free_id
+    if waiting == message.from_id:
+        await message.reply('Вы уже в очереди.\nЧтобы остановить поиск, нажмите /cancel ')
+        return
+    game_id = get_user_game(message.from_id)
+    if game_id == -1 or game_id >= free_id:
+        await message.reply('Ищу соперника!\nЧтобы остановить поиск, нажмите /cancel ')
+        if waiting != -1:
+            await start_game(waiting, message.from_id)
+            waiting = -1
+        else:
+            waiting = message.from_id
     else:
-        waiting = message.from_id
+        await message.reply('Вы сейчас находитесь в игре. Продолжите игру, либо, если хотите её завершить, нажмите /stop ')
 
 async def finish_game(game_id, someone=0):
     players = games[game_id].players
@@ -178,10 +185,24 @@ async def finish_game(game_id, someone=0):
 
 @dp.message_handler(commands=['stop'])
 async def stop_game(message : types.Message):
+    global free_id
     game_id = get_user_game(message.from_id)
     if game_id == -1 or game_id >= free_id:
-        await message.reply("Вы сейчас не в игре.\nЧтобы начать новую игру, нажмите команду /play ")
+        await message.reply("Вы сейчас не в игре.\nЧтобы начать новую игру, нажмите /play ")
+        return
     await finish_game(game_id, 1)
+
+@dp.message_handler(commands=['cancel'])
+async def stop_game(message : types.Message):
+    global waiting
+    user_id = message.from_id
+    if waiting != user_id:
+        await message.reply("Вы сейчас не в поиске.\nЧтобы начать новую игру, нажмите /play ")
+        return
+    waiting = -1
+    await message.reply("Поиск остановлен.\nЧтобы начать новую игру, нажмите /play ")
+    
+
 
 
 async def make_go(game_id, x, y):
