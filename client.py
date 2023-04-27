@@ -4,6 +4,7 @@ from create_and_start import bot, games, free_id, waiting
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from cross_zero import game
+import asyncio
 
 # @dp.message_handler(commands=['start', 'help'])
 async def go_hello(message : types.Message):
@@ -22,11 +23,13 @@ async def send_field(game_id, final = 0):
     kb = games[game_id].get_kb()
     players = games[game_id].players
     if final == 0:
-        await bot.send_message(players[games[game_id].current], 'Ваш ход - - - - - - - -', reply_markup=kb)
-        await bot.send_message(players[1-games[game_id].current], 'Ход соперника- - - -', reply_markup=kb)
+        task1 = asyncio.create_task(bot.send_message(players[games[game_id].current], 'Ваш ход - - - - - - - -', reply_markup=kb))
+        task2 = asyncio.create_task(bot.send_message(players[1-games[game_id].current], 'Ход соперника- - - -', reply_markup=kb))
+        await asyncio.gather(task1, task2)
     else:
-        await bot.send_message(players[games[game_id].current], 'Финальная карта- - -', reply_markup=kb)
-        await bot.send_message(players[1-games[game_id].current], 'Финальная карта- - -', reply_markup=kb)
+        task1 = asyncio.create_task(bot.send_message(players[games[game_id].current], 'Финальная карта- - -', reply_markup=kb))
+        task2 = asyncio.create_task(bot.send_message(players[1-games[game_id].current], 'Финальная карта- - -', reply_markup=kb))
+        await asyncio.gather(task1, task2)
 
 
 class FSM_search_game(StatesGroup):
@@ -42,8 +45,9 @@ async def start_game(player1, player2, sz):
     games[free_id] = new_game
     game_id = free_id
     free_id+=1
-    await bot.send_message(player1, f"Игра началась!\nВам нужно поставить {games[game_id].need_to_win} {games[game_id].symb[0]} в ряд или в диагональ для победы. \nЧтобы завершить игру до её окончания, нажмите /stop ")
-    await bot.send_message(player2, f"Игра началась!\nВам нужно поставить {games[game_id].need_to_win} {games[game_id].symb[1]} в ряд или в диагональ для победы. \nЧтобы завершить игру до её окончания, нажмите /stop ")
+    task1 = asyncio.create_task(bot.send_message(player1, f"Игра началась!\nВам нужно поставить {games[game_id].need_to_win} {games[game_id].symb[0]} в ряд или в диагональ для победы. \nЧтобы завершить игру до её окончания, нажмите /stop "))
+    task2 = asyncio.create_task(bot.send_message(player2, f"Игра началась!\nВам нужно поставить {games[game_id].need_to_win} {games[game_id].symb[1]} в ряд или в диагональ для победы. \nЧтобы завершить игру до её окончания, нажмите /stop "))
+    await asyncio.gather(task1, task2)
     await send_field(game_id)
 
 #adds to queue
@@ -91,9 +95,9 @@ async def finish_game(game_id, someone=0):
     edit_user_game(players[1], -1)
     del games[game_id]
     if someone == 1:
-        await bot.send_message(players[0], 'Игра завершена одним из игроков.\nЧтобы начать новую игру, нажмите команду /play ')
-        await bot.send_message(players[1], 'Игра завершена одним из игроков.\nЧтобы начать новую игру, нажмите команду /play ')
-
+        task1 = asyncio.create_task(bot.send_message(players[0], 'Игра завершена одним из игроков.\nЧтобы начать новую игру, нажмите команду /play '))
+        task2 = asyncio.create_task(bot.send_message(players[1], 'Игра завершена одним из игроков.\nЧтобы начать новую игру, нажмите команду /play '))
+        await asyncio.gather(task1, task2)
 #manual game stop
 # @dp.message_handler(commands=['stop'])
 async def stop_game(message : types.Message):
@@ -131,11 +135,13 @@ async def make_go(game_id, x, y):
     
     await send_field(game_id, 1)
     if st == 0:
-        await bot.send_message(players[1-games[game_id].current], 'Вы выиграли!\nЧтобы начать новую игру, нажмите /play ')
-        await bot.send_message(players[games[game_id].current], 'Вы проиграли!\nЧтобы начать новую игру, нажмите /play ')
+        task1 = asyncio.create_task(bot.send_message(players[1-games[game_id].current], 'Вы выиграли!\nЧтобы начать новую игру, нажмите /play '))
+        task2 = asyncio.create_task(bot.send_message(players[games[game_id].current], 'Вы проиграли!\nЧтобы начать новую игру, нажмите /play '))
+        await asyncio.gather(task1, task2)
     else:
-        await bot.send_message(players[1-games[game_id].current], 'Ничья!\nЧтобы начать новую игру, нажмите /play ')
-        await bot.send_message(players[games[game_id].current], 'Ничья!\nЧтобы начать новую игру, нажмите /play ')
+        task1 = asyncio.create_task(bot.send_message(players[1-games[game_id].current], 'Ничья!\nЧтобы начать новую игру, нажмите /play '))
+        task2 = asyncio.create_task(bot.send_message(players[games[game_id].current], 'Ничья!\nЧтобы начать новую игру, нажмите /play '))
+        await asyncio.gather(task1, task2)
     await finish_game(game_id)
     return 1
     
@@ -144,6 +150,7 @@ async def make_go(game_id, x, y):
 async def some_text(callback : types.CallbackQuery):
     message = callback.message
     user_id = callback.from_user.id
+    check_auth(user_id)
     game_id = get_user_game(user_id)
     if game_id == -1 or game_id >= free_id:
         await message.reply("Вы сейчас не в игре. нажмите /play, чтобы играть.")

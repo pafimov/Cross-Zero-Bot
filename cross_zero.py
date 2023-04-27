@@ -46,15 +46,6 @@ class game:
     #returns 0 if someone won
     #returns 1 if its draw
     def check_won(self):
-        #check the draw
-        cnt_free = 0
-        for i in range(self.sz):
-            for j in range(self.sz):
-                if self.field[i][j] == self.neutral:
-                    cnt_free+=1
-        if cnt_free == 0:
-            return 1
-        
         n = self.sz
         for i in range(n):
             for j in range(n):
@@ -72,6 +63,15 @@ class game:
                 if self.have_winning_path(i, j, 1, -1):
                     return 0
         
+        #check the draw
+        cnt_free = 0
+        for i in range(self.sz):
+            for j in range(self.sz):
+                if self.field[i][j] == self.neutral:
+                    cnt_free+=1
+        if cnt_free == 0:
+            return 1
+
         return -1
 
     #returns keyboard with current map
@@ -87,6 +87,8 @@ class game:
     #user made a move
     def go(self, x, y):
         was = self.current
+        if x >= self.sz or y >= self.sz:
+            return -1
         if self.field[x][y] != self.neutral:
             return -1
         
